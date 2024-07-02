@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 void fail(const char *message) {
   fprintf(stderr, "%s\n", message);
@@ -27,11 +28,49 @@ unsigned int token_roll(char *token) {
   return roll_dice(NULL, nRolls, nSides);
 }
 
+void tokenize(char *equation, int *stack, size_t *stack_size) {
+  size_t len = strlen(equation);
+  char *token = equation;
+  char is_roll = 1;
+  for (size_t i = 0; i < len + 1; i++) {
+    if (equation[i] == 'd') {
+      is_roll = 1;
+    } else if (equation[i] == '+' || equation[i] == '-' || equation[i] == '*' ||
+               equation[i] == '/' || equation[i] == '\0') {
+      char op = equation[i];
+      equation[i] = '\0';
+      if (is_roll) {
+        is_roll = 0;
+        stack[*stack_size] = token_roll(token);
+      } else {
+        stack[*stack_size] = atoi(token);
+      }
+      *stack_size = *stack_size + 1;
+      token = &equation[i] + 1;
+      if (op != '\0') {
+        stack[*stack_size] = op;
+        *stack_size = *stack_size + 1;
+      }
+      equation[i] = op;
+    }
+  }
+}
+
+typedef struct node {
+  int value;
+  char is_character;
+  struct node *next;
+} node_t;
+
 int main(int argc, char *argv[]) {
   if (argc < 2) {
     fail("Too few arguments");
   }
-  unsigned int result = token_roll(argv[1]);
-  printf("%u\n", result);
+  int token_stack[1024];
+  size_t token_stack_size = 0;
+  tokenize(argv[1], token_stack, &token_stack_size);
+  for (size_t i = 0; i < token_stack_size; i++) {
+    printf("%d\n", token_stack[i]);
+  }
   return EXIT_SUCCESS;
 }
