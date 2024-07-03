@@ -28,32 +28,30 @@ unsigned int token_roll(char *token) {
   return roll_dice(NULL, nRolls, nSides);
 }
 
-void tokenize(char *equation, int *stack, size_t *stack_size) {
-  size_t len = strlen(equation);
+void tokenize(const char *source_equation, char stack[][64],
+              size_t *stack_size) {
+  size_t len = strlen(source_equation);
+  char *equation = malloc(sizeof(char) * (len + 1));
+  strcpy(equation, source_equation);
   char *token = equation;
-  char is_roll = 1;
   for (size_t i = 0; i < len + 1; i++) {
-    if (equation[i] == 'd') {
-      is_roll = 1;
-    } else if (equation[i] == '+' || equation[i] == '-' || equation[i] == '*' ||
-               equation[i] == '/' || equation[i] == '\0') {
+    if (equation[i] == '+' || equation[i] == '-' || equation[i] == '*' ||
+        equation[i] == '/' || equation[i] == '\0' || equation[i] == ' ') {
       char op = equation[i];
       equation[i] = '\0';
-      if (is_roll) {
-        is_roll = 0;
-        stack[*stack_size] = token_roll(token);
-      } else {
-        stack[*stack_size] = atoi(token);
-      }
-      *stack_size = *stack_size + 1;
-      token = &equation[i] + 1;
-      if (op != '\0') {
-        stack[*stack_size] = op;
+      if (&equation[i]-token > 0) {
+        strcpy(stack[*stack_size], token);
         *stack_size = *stack_size + 1;
       }
-      equation[i] = op;
+      token = &equation[i] + 1;
+      if (op != '\0' && op != ' ') {
+        stack[*stack_size][0] = op;
+        stack[*stack_size][1] = '\0';
+        *stack_size = *stack_size + 1;
+      }
     }
   }
+  free(equation);
 }
 
 typedef struct node {
@@ -66,11 +64,11 @@ int main(int argc, char *argv[]) {
   if (argc < 2) {
     fail("Too few arguments");
   }
-  int token_stack[1024];
+  char token_stack[1024][64];
   size_t token_stack_size = 0;
   tokenize(argv[1], token_stack, &token_stack_size);
   for (size_t i = 0; i < token_stack_size; i++) {
-    printf("%d\n", token_stack[i]);
+    printf("%s\n", token_stack[i]);
   }
   return EXIT_SUCCESS;
 }
