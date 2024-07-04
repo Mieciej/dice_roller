@@ -5,6 +5,7 @@
 #include <string.h>
 #include <time.h>
 #define MAX_TOKEN_LENGTH 64
+#define MAX_NUMBER_OF_TOKENS 256
 void fail(const char *message) {
   fprintf(stderr, "%s\n", message);
   exit(EXIT_FAILURE);
@@ -92,13 +93,13 @@ void shunting_yard(const char input_stack[][MAX_TOKEN_LENGTH],
                    size_t *output_size) {
 
   assert(*output_size == 0);
-  char operator_stack[256];
+  char operator_stack[MAX_NUMBER_OF_TOKENS];
   size_t operator_stack_size = 0;
   for (size_t i = 0; i < input_size; i++) {
     if (is_operator(input_stack[i][0])) {
       while (operator_stack_size > 0 &&
              operator_precedence(operator_stack[operator_stack_size - 1]) >=
-                                 operator_precedence(input_stack[i][0])) {
+                 operator_precedence(input_stack[i][0])) {
 
         char op[2];
         op[0] = operator_stack[--operator_stack_size];
@@ -120,13 +121,42 @@ void shunting_yard(const char input_stack[][MAX_TOKEN_LENGTH],
     *output_size = *output_size + 1;
   }
 }
-
+int evaluate_rpn(const char rpn[][MAX_TOKEN_LENGTH], size_t len) {
+  int number_stack[MAX_NUMBER_OF_TOKENS];
+  int stack_size = 0, a, b;
+  for (size_t i = 0; i < len; i++) {
+    if (is_operator(rpn[i][0])) {
+      b = number_stack[--stack_size];
+      a = number_stack[--stack_size];
+      switch (rpn[i][0]) { 
+        case '*':
+          number_stack[stack_size++]=a*b;
+        break;
+        case '/':
+          number_stack[stack_size++]=a/b;
+        break;
+        case '-':
+          number_stack[stack_size++]=a-b;
+        break;
+        case '+':
+          number_stack[stack_size++]=a+b;
+        break;
+        default:
+        assert("Incorrect operator while processing RPN");
+      }
+    } else {
+      number_stack[stack_size++] = atoi(rpn[i]);
+    }
+  }
+  assert(stack_size==1&&"Incorrect rpn solution");
+  return number_stack[0];
+}
 
 int main(int argc, char *argv[]) {
   if (argc < 2) {
     fail("Too few arguments");
   }
-  char token_stack[256][MAX_TOKEN_LENGTH];
+  char token_stack[MAX_NUMBER_OF_TOKENS][MAX_TOKEN_LENGTH];
   size_t token_stack_size = 0;
   tokenize(argv[1], token_stack, &token_stack_size);
   for (size_t i = 0; i < token_stack_size; i++) {
@@ -138,11 +168,14 @@ int main(int argc, char *argv[]) {
     printf("%s\n", token_stack[i]);
   }
   printf("\n");
-  char rpn[256][MAX_TOKEN_LENGTH];
+  char rpn[MAX_NUMBER_OF_TOKENS][MAX_TOKEN_LENGTH];
   size_t rpn_size = 0;
-  shunting_yard(token_stack, token_stack_size,rpn, &rpn_size);
+  shunting_yard(token_stack, token_stack_size, rpn, &rpn_size);
   for (size_t i = 0; i < rpn_size; i++) {
     printf("%s\n", rpn[i]);
   }
+  printf("\n");
+  int result =evaluate_rpn(rpn, rpn_size);
+  printf("%d\n",result);
   return EXIT_SUCCESS;
 }
