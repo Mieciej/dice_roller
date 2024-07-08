@@ -1,7 +1,7 @@
+#include "tokens.h"
 #include "defs.h"
 #include "dice.h"
 #include "operator.h"
-#include "tokens.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,7 +33,8 @@ void tokenize(const char *source_equation, char stack[][MAX_TOKEN_LENGTH],
   strcpy(equation, source_equation);
   char *token = equation;
   for (size_t i = 0; i < len + 1; i++) {
-    if (is_operator(equation[i]) || equation[i] == '\0' || equation[i] == ' ') {
+    if (is_operator(equation[i]) || equation[i] == '\0' || equation[i] == ' ' ||
+        equation[i] == ')' || equation[i] == '(') {
       char op = equation[i];
       equation[i] = '\0';
       if (&equation[i] - token > 0) {
@@ -41,7 +42,7 @@ void tokenize(const char *source_equation, char stack[][MAX_TOKEN_LENGTH],
         *stack_size = *stack_size + 1;
       }
       token = &equation[i] + 1;
-      if (is_operator(op)) {
+      if (is_operator(op) || op == ')' || op == '(') {
         stack[*stack_size][0] = op;
         stack[*stack_size][1] = '\0';
         *stack_size = *stack_size + 1;

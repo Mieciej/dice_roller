@@ -2,6 +2,7 @@
 #include "operator.h"
 #include "evaluation.h"
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -45,7 +46,7 @@ void shunting_yard(const char input_stack[][MAX_TOKEN_LENGTH],
   size_t operator_stack_size = 0;
   for (size_t i = 0; i < input_size; i++) {
     if (is_operator(input_stack[i][0])) {
-      while (operator_stack_size > 0 &&
+      while (operator_stack_size > 0 && operator_stack[operator_stack_size-1] != '(' && 
              operator_precedence(operator_stack[operator_stack_size - 1]) >=
                  operator_precedence(input_stack[i][0])) {
 
@@ -56,7 +57,21 @@ void shunting_yard(const char input_stack[][MAX_TOKEN_LENGTH],
         *output_size = *output_size + 1;
       }
       operator_stack[operator_stack_size++] = input_stack[i][0];
-    } else {
+    } else if(input_stack[i][0]=='(') {
+      operator_stack[operator_stack_size++] = input_stack[i][0];
+    } else if(input_stack[i][0] == ')') {
+      while(operator_stack_size > 0 && operator_stack[operator_stack_size-1] != '('){
+        char op[2];
+        op[0] = operator_stack[--operator_stack_size];
+        op[1] = '\0';
+        strcpy(output_stack[*output_size], op);
+        *output_size = *output_size + 1;
+      }
+      assert(operator_stack_size > 0 && "Did not find matching \'(\' parenthesis");
+      assert(operator_stack[operator_stack_size-1] == '('&& "Did not find matching \'(\' parenthesis");
+      operator_stack_size--;
+    }
+    else {
       strcpy(output_stack[*output_size], input_stack[i]);
       *output_size = *output_size + 1;
     }
