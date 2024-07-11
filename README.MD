@@ -1,3 +1,6 @@
+<p align="center" style="padding: none; margin:none;">
+    <img src="./dice_roller.png" height="170">
+</p>
 # Dice Roller
 Dice roller is simple linux program for rolling dice.
 
